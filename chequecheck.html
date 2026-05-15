@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>卓越財務 | 廠商支票開立查詢系統</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap');
+        
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+            overflow-x: hidden;
+        }
+
+        /* 高級感動態背景 */
+        .bg-gradient {
+            background: radial-gradient(circle at top right, #1e293b 0%, #020617 100%);
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+
+        .animated-shape {
+            position: absolute;
+            filter: blur(80px);
+            opacity: 0.3;
+            z-index: -1;
+            animation: float 20s infinite alternate;
+        }
+
+        @keyframes float {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(10vw, 10vh) scale(1.2); }
+        }
+
+        .glass-morphism {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+
+        .search-input {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .search-input:focus {
+            border-color: #64748b;
+            box-shadow: 0 0 0 2px rgba(100, 116, 139, 0.2);
+            outline: none;
+        }
+
+        .btn-gold {
+            background: linear-gradient(135deg, #94a3b8 0%, #475569 100%);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .btn-gold:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        /* 隱藏捲軸但保持滾動 */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #475569;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center p-4">
+    <div class="bg-gradient"></div>
+    <div class="animated-shape w-96 h-96 bg-blue-900 top-0 left-0"></div>
+    <div class="animated-shape w-80 h-80 bg-slate-800 bottom-0 right-0" style="animation-delay: -5s;"></div>
+
+    <!-- 登入介面 -->
+    <div id="loginSection" class="w-full max-w-md animate__animated animate__fadeIn">
+        <div class="glass-morphism p-8 rounded-2xl text-center">
+            <div class="mb-6">
+                <div class="w-20 h-20 bg-slate-700 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                </div>
+                <h1 class="text-2xl font-bold tracking-widest mb-2">身分認證</h1>
+                <p class="text-slate-400 text-sm">請輸入存取密碼以瀏覽財務資料</p>
+            </div>
+            <input type="password" id="password" class="w-full search-input p-3 rounded-lg text-center mb-4 text-lg tracking-widest" placeholder="••••••••">
+            <button onclick="handleLogin()" id="loginBtn" class="w-full btn-gold text-white font-medium p-3 rounded-lg">進入系統</button>
+            <p id="loginError" class="text-red-400 text-sm mt-4 hidden">驗證失敗或系統連線異常</p>
+        </div>
+    </div>
+
+    <!-- 主要查詢內容 -->
+    <div id="mainSection" class="w-full max-w-6xl hidden animate__animated animate__fadeInUp">
+        <div class="flex justify-between items-center mb-8">
+            <div>
+                <h2 class="text-3xl font-light tracking-tight">廠商支票開立查詢</h2>
+                <p class="text-slate-400 mt-1">Cheque Check</p>
+            </div>
+            <div class="flex items-center gap-4">
+                <span id="loadingStatus" class="text-xs text-amber-400 hidden animate-pulse">數據同步中...</span>
+                <button onclick="logout()" class="text-slate-400 hover:text-white transition-colors text-sm">安全登出</button>
+            </div>
+        </div>
+
+        <!-- 搜尋工具列 -->
+        <div class="glass-morphism p-6 rounded-xl mb-8 grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
+            <input type="text" id="searchVendor" class="search-input p-3 rounded-lg text-sm" placeholder="搜尋廠商名稱...">
+            <input type="text" id="searchDate" class="search-input p-3 rounded-lg text-sm" placeholder="搜尋票期...">
+            <select id="searchBack" class="search-input p-3 rounded-lg text-sm">
+                <option value="">是否禁背 (全部)</option>
+                <option value="是">是</option>
+                <option value="否">否</option>
+            </select>
+            <select id="searchTransfer" class="search-input p-3 rounded-lg text-sm">
+                <option value="">是否匯款 (全部)</option>
+                <option value="是">是</option>
+                <option value="否">否</option>
+            </select>
+            <button onclick="filterData()" class="btn-gold text-white rounded-lg p-3 text-sm font-medium">執行檢索</button>
+        </div>
+
+        <!-- 資料表格 -->
+        <div class="glass-morphism rounded-xl overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-slate-800/50 text-slate-300 text-sm uppercase tracking-wider">
+                            <th class="p-4 font-medium">廠商名稱</th>
+                            <th class="p-4 font-medium">票期</th>
+                            <th class="p-4 font-medium text-center">是否禁背</th>
+                            <th class="p-4 font-medium text-center">是否匯款</th>
+                            <th class="p-4 font-medium">支票地址</th>
+                        </tr>
+                    </thead>
+                    <tbody id="dataTableBody" class="text-slate-300">
+                        <tr>
+                            <td colspan="5" class="p-20 text-center text-slate-500 text-sm">
+                                正在建立與 Google 資料庫的連線...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <p class="mt-4 text-slate-500 text-xs text-center italic">© 2024 財務管理部 - 所有資料均受加密保護</p>
+    </div>
+
+    <script>
+        // --- 設定區 ---
+        const API_URL = "https://script.google.com/macros/s/AKfycbylk73vwxW60415TueOHesUBwR-oa4Y5NdTpBqZvOQ8XqmwazPJFPLNAA7n0iSOm6jD/exec"; 
+        
+        let allData = [];
+        let currentPwd = "";
+
+        // 使用更穩定、能處理跳轉的請求機制
+        function callApi(params) {
+            return new Promise((resolve, reject) => {
+                const queryString = Object.keys(params)
+                    .map(key => encodeURIComponent(key) + '=' + encodeURIComponent(params[key]))
+                    .join('&');
+                
+                const xhr = new XMLHttpRequest();
+                xhr.open("GET", `${API_URL}?${queryString}`, true);
+                // GAS 需要跟隨 Redirect，XMLHttpRequest 預設會處理
+                xhr.onreadystatechange = function () {
+                    if (xhr.readyState === 4) {
+                        if (xhr.status === 200) {
+                            try {
+                                resolve(JSON.parse(xhr.responseText));
+                            } catch (e) {
+                                reject("資料格式解析失敗");
+                            }
+                        } else {
+                            reject("連線失敗，狀態碼: " + xhr.status);
+                        }
+                    }
+                };
+                xhr.onerror = function () {
+                    reject("連線異常，請確認 API URL 部署是否為「所有人」存取。");
+                };
+                xhr.send();
+            });
+        }
+
+        // 登入邏輯
+        async function handleLogin() {
+            const pwdInput = document.getElementById('password');
+            const pwd = pwdInput.value;
+            const btn = document.getElementById('loginBtn');
+            const error = document.getElementById('loginError');
+
+            if (!pwd) return;
+
+            btn.disabled = true;
+            btn.innerText = "驗證中...";
+            error.classList.add('hidden');
+            
+            try {
+                const result = await callApi({ action: 'login', password: pwd });
+
+                if (result.success) {
+                    currentPwd = pwd;
+                    document.getElementById('loginSection').classList.add('hidden');
+                    document.getElementById('mainSection').classList.remove('hidden');
+                    loadData(); 
+                } else {
+                    showError("存取代碼錯誤，請重新輸入");
+                    pwdInput.value = "";
+                }
+            } catch (e) {
+                console.error("Login Error:", e);
+                showError("無法連線至 Google 伺服器，請確保 GAS 部署權限為「所有人」。");
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "進入系統";
+            }
+        }
+
+        function showError(msg) {
+            const error = document.getElementById('loginError');
+            error.innerText = msg;
+            error.classList.remove('hidden');
+        }
+
+        // 載入資料
+        async function loadData() {
+            const status = document.getElementById('loadingStatus');
+            status.classList.remove('hidden');
+            
+            try {
+                const data = await callApi({ action: 'getData', password: currentPwd });
+                
+                if (Array.isArray(data)) {
+                    allData = data;
+                    renderTable(data);
+                } else {
+                    throw new Error("Invalid Data Format");
+                }
+            } catch (e) {
+                console.error("Data Load Error:", e);
+                const tbody = document.getElementById('dataTableBody');
+                tbody.innerHTML = '<tr><td colspan="5" class="p-10 text-center text-red-400">連線逾時，請確認網路環境或重新整理頁面</td></tr>';
+            } finally {
+                status.classList.add('hidden');
+            }
+        }
+
+        // 渲染表格
+        function renderTable(data) {
+            const tbody = document.getElementById('dataTableBody');
+            if (!data || data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="p-10 text-center text-slate-500">查無相符資料</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = data.map((row, index) => `
+                <tr class="border-t border-slate-700/50 hover:bg-slate-700/20 transition-colors animate__animated animate__fadeIn" style="animation-delay: ${index * 0.02}s">
+                    <td class="p-4 font-medium text-white">${row.廠商名稱 || '-'}</td>
+                    <td class="p-4 text-slate-400">${row.票期 || '-'}</td>
+                    <td class="p-4 text-center">
+                        <span class="px-3 py-1 rounded-full text-[10px] ${row.是否禁背 === '是' ? 'bg-amber-900/30 text-amber-400 border border-amber-800/30' : 'bg-slate-800 text-slate-500'}">
+                            ${row.是否禁背 || '否'}
+                        </span>
+                    </td>
+                    <td class="p-4 text-center">
+                        <span class="px-3 py-1 rounded-full text-[10px] ${row.是否匯款 === '是' ? 'bg-blue-900/30 text-blue-400 border border-blue-800/30' : 'bg-slate-800 text-slate-500'}">
+                            ${row.是否匯款 || '否'}
+                        </span>
+                    </td>
+                    <td class="p-4 text-sm text-slate-400 truncate max-w-xs">${row.支票地址 || '-'}</td>
+                </tr>
+            `).join('');
+        }
+
+        // 過濾搜尋
+        function filterData() {
+            const v = document.getElementById('searchVendor').value.toLowerCase();
+            const d = document.getElementById('searchDate').value.toLowerCase();
+            const b = document.getElementById('searchBack').value;
+            const t = document.getElementById('searchTransfer').value;
+
+            const filtered = allData.filter(item => {
+                const vendorMatch = (item.廠商名稱 || "").toLowerCase().includes(v);
+                const dateMatch = (item.票期 || "").toLowerCase().includes(d);
+                const backMatch = (b === "" || item.是否禁背 === b);
+                const transMatch = (t === "" || item.是否匯款 === t);
+                return vendorMatch && dateMatch && backMatch && transMatch;
+            });
+            renderTable(filtered);
+        }
+
+        function logout() {
+            location.reload();
+        }
+    </script>
+</body>
+</html>
