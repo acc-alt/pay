@@ -93,8 +93,8 @@
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                     </svg>
                 </div>
-                <h1 class="text-2xl font-bold tracking-widest mb-2">身分認證</h1>
-                <p class="text-slate-400 text-sm">請輸入存取密碼以瀏覽財務資料</p>
+                <h1 class="text-2xl font-bold tracking-widest mb-2">通關密語</h1>
+                <p class="text-slate-400 text-sm">不是相關人員不能進入喔!</p>
             </div>
             <input type="password" id="password" class="w-full search-input p-3 rounded-lg text-center mb-4 text-lg tracking-widest" placeholder="••••••••">
             <button onclick="handleLogin()" id="loginBtn" class="w-full btn-gold text-white font-medium p-3 rounded-lg">進入系統</button>
@@ -121,13 +121,13 @@
             <input type="text" id="searchDate" class="search-input p-3 rounded-lg text-sm" placeholder="搜尋票期...">
             <select id="searchBack" class="search-input p-3 rounded-lg text-sm">
                 <option value="">是否禁背 (全部)</option>
-                <option value="是">是</option>
-                <option value="否">否</option>
+                <option value="禁背">禁背</option>
+                <option value="不禁背">不禁背</option>
             </select>
             <select id="searchTransfer" class="search-input p-3 rounded-lg text-sm">
-                <option value="">是否匯款 (全部)</option>
-                <option value="是">是</option>
-                <option value="否">否</option>
+                <option value="">支付方式 (全部)</option>
+                <option value="支票">支票</option>
+                <option value="匯款">匯款</option>
             </select>
             <button onclick="filterData()" class="btn-gold text-white rounded-lg p-3 text-sm font-medium">執行檢索</button>
         </div>
@@ -271,13 +271,13 @@
                     <td class="p-4 font-medium text-white">${row.廠商名稱 || '-'}</td>
                     <td class="p-4 text-slate-400">${row.票期 || '-'}</td>
                     <td class="p-4 text-center">
-                        <span class="px-3 py-1 rounded-full text-[10px] ${row.是否禁背 === '是' ? 'bg-amber-900/30 text-amber-400 border border-amber-800/30' : 'bg-slate-800 text-slate-500'}">
-                            ${row.是否禁背 || '否'}
+                        <span class="px-3 py-1 rounded-full text-[10px] ${row.是否禁背 === '禁背' ? 'bg-amber-900/30 text-amber-400 border border-amber-800/30' : 'bg-slate-800 text-slate-500'}">
+                            ${row.是否禁背 || '不禁背'}
                         </span>
                     </td>
                     <td class="p-4 text-center">
-                        <span class="px-3 py-1 rounded-full text-[10px] ${row.是否匯款 === '是' ? 'bg-blue-900/30 text-blue-400 border border-blue-800/30' : 'bg-slate-800 text-slate-500'}">
-                            ${row.是否匯款 || '否'}
+                        <span class="px-3 py-1 rounded-full text-[10px] ${row.支付方式 === '支票' ? 'bg-blue-900/30 text-blue-400 border border-blue-800/30' : 'bg-slate-800 text-slate-500'}">
+                            ${row.支付方式 || '匯款'}
                         </span>
                     </td>
                     <td class="p-4 text-sm text-slate-400 truncate max-w-xs">${row.支票地址 || '-'}</td>
@@ -296,7 +296,7 @@
                 const vendorMatch = (item.廠商名稱 || "").toLowerCase().includes(v);
                 const dateMatch = (item.票期 || "").toLowerCase().includes(d);
                 const backMatch = (b === "" || item.是否禁背 === b);
-                const transMatch = (t === "" || item.是否匯款 === t);
+                const transMatch = (t === "" || item.支付方式 === t);
                 return vendorMatch && dateMatch && backMatch && transMatch;
             });
             renderTable(filtered);
